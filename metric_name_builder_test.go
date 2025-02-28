@@ -1,6 +1,7 @@
 package translator
 
 import (
+	"reflect"
 	"testing"
 )
 
@@ -289,5 +290,55 @@ func TestBuildCompliantMetricName(t *testing.T) {
 				t.Errorf("expected %s, got %s", tt.expected, result)
 			}
 		})
+	}
+}
+
+func TestAddUnitTokens(t *testing.T) {
+	tests := []struct {
+		nameTokens     []string
+		mainUnitSuffix string
+		perUnitSuffix  string
+		expected       []string
+	}{
+		{[]string{}, "", "", []string{}},
+		{[]string{"token1"}, "main", "", []string{"token1", "main"}},
+		{[]string{"token1"}, "", "per", []string{"token1", "per"}},
+		{[]string{"token1"}, "main", "per", []string{"token1", "main", "per"}},
+		{[]string{"token1", "per"}, "main", "per", []string{"token1", "per", "main"}},
+		{[]string{"token1", "main"}, "main", "per", []string{"token1", "main", "per"}},
+		{[]string{"token1"}, "main_", "per", []string{"token1", "main", "per"}},
+		{[]string{"token1"}, "main_unit", "per_seconds_", []string{"token1", "main_unit", "per_seconds"}}, // trailing underscores are removed
+		{[]string{"token1"}, "main_unit", "per_", []string{"token1", "main_unit"}},                        // 'per_' is removed entirely
+	}
+
+	for _, test := range tests {
+		result := addUnitTokens(test.nameTokens, test.mainUnitSuffix, test.perUnitSuffix)
+		if !reflect.DeepEqual(test.expected, result) {
+			t.Errorf("expected %v, got %v", test.expected, result)
+		}
+	}
+}
+
+func TestRemoveItem(t *testing.T) {
+	if !reflect.DeepEqual([]string{}, removeItem([]string{}, "test")) {
+		t.Errorf("expected %v, got %v", []string{}, removeItem([]string{}, "test"))
+	}
+	if !reflect.DeepEqual([]string{}, removeItem([]string{}, "")) {
+		t.Errorf("expected %v, got %v", []string{}, removeItem([]string{}, ""))
+	}
+	if !reflect.DeepEqual([]string{"a", "b", "c"}, removeItem([]string{"a", "b", "c"}, "d")) {
+		t.Errorf("expected %v, got %v", []string{"a", "b", "c"}, removeItem([]string{"a", "b", "c"}, "d"))
+	}
+	if !reflect.DeepEqual([]string{"a", "b", "c"}, removeItem([]string{"a", "b", "c"}, "")) {
+		t.Errorf("expected %v, got %v", []string{"a", "b", "c"}, removeItem([]string{"a", "b", "c"}, ""))
+	}
+	if !reflect.DeepEqual([]string{"a", "b"}, removeItem([]string{"a", "b", "c"}, "c")) {
+		t.Errorf("expected %v, got %v", []string{"a", "b"}, removeItem([]string{"a", "b", "c"}, "c"))
+	}
+	if !reflect.DeepEqual([]string{"a", "c"}, removeItem([]string{"a", "b", "c"}, "b")) {
+		t.Errorf("expected %v, got %v", []string{"a", "c"}, removeItem([]string{"a", "b", "c"}, "b"))
+	}
+	if !reflect.DeepEqual([]string{"b", "c"}, removeItem([]string{"a", "b", "c"}, "a")) {
+		t.Errorf("expected %v, got %v", []string{"b", "c"}, removeItem([]string{"a", "b", "c"}, "a"))
 	}
 }

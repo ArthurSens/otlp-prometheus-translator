@@ -67,18 +67,6 @@ var (
 	multipleUnderscoresRE = regexp.MustCompile(`__+`)
 )
 
-type MetricType string
-
-const (
-	MetricTypeNonMonotonicCounter  MetricType = "non-monotonic-counter"
-	MetricTypeMonotonicCounter     MetricType = "monotonic-counter"
-	MetricTypeGauge                MetricType = "gauge"
-	MetricTypeHistogram            MetricType = "histogram"
-	MetricTypeExponentialHistogram MetricType = "exponential-histogram"
-	MetricTypeSummary              MetricType = "summary"
-	MetricTypeUnknown              MetricType = "unknown"
-)
-
 // BuildMetricName builds a valid metric name but without following Prometheus naming conventions.
 // It doesn't do any character transformation, it only prefixes the metric name with the namespace, if any,
 // and adds metric type suffixes, e.g. "_total" for counters and unit suffixes.
